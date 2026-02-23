@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Evento {
+  id          String   @id @db.NVarChar(36)
+  title       String   @db.NVarChar(180)
+  description String?  @db.NVarChar(1024)
+  idImagem    Int?     @map("IdImagem")
+  url         String?  @db.NVarChar(512)
+  imagem      Imagem?  @relation(fields: [idImagem], references: [id])
+
+  @@map("Eventos")
+}
+
+model Rede {
+  id       Int     @id @default(autoincrement())
+  label    String  @db.NVarChar(120)
+  churchId Int?    @map("idChurch")
+  church   Church? @relation(fields: [churchId], references: [id], onDelete: SetNull)
+
+  @@map("Redes")
+}
+
+model TipoUsuario {
+  id    Int    @id @default(autoincrement()) @map("Id")
+  label String @map("Label") @db.NVarChar(255)
+
+  @@map("tipoUsuario")
+}
+
+model TipoSalaInfantil {
+  id   Int    @id @default(autoincrement())
+  nome String @db.NVarChar(100)
+  salas SalaInfantil[]
+
+  @@map("TipoSalaInfantil")
+}
+
+model SalaInfantil {
+  id          Int     @id @default(autoincrement())
+  nome        String  @db.NVarChar(100)
+  tipoSalaId  Int     @map("TipoSala")
+  tipoSala    TipoSalaInfantil @relation(fields: [tipoSalaId], references: [id], onDelete: NoAction)
+  idChurch    Int     @map("IdChurch")
+  church      Church  @relation(fields: [idChurch], references: [id], onDelete: NoAction)
+  enabled     Boolean @default(true) @map("Enabled")
+  idadeMinima Int     @map("IdadeMinima")
+  idadeMaxima Int     @map("IdadeMaxima")
+
+  @@map("SalaInfantil")
+}
+
+model Membro {
+  id                 Int      @id @default(autoincrement())
+  nomeCompleto       String   @db.NVarChar(180)
+  email              String   @db.NVarChar(180)
+  telefone           String?  @db.NVarChar(20)
+  dataNascimento     DateTime?
+  rede               String?  @db.NVarChar(120)
+  tipoUsuario        String?  @db.NVarChar(120)
+  participaMvv       Boolean  @default(false)
+  aceitaNotificacoes Boolean  @default(false)
+  aceitaEmail        Boolean  @default(false)
+
+  @@map("Membros")
+}
+
+model VideoResource {
+  id          Int     @id @default(autoincrement()) @map("Id")
+  title       String  @db.NVarChar(255) @map("Title")
+  description String? @db.NVarChar(Max) @map("Description")
+  videoId     String  @db.NVarChar(255) @map("VideoId")
+
+  @@map("VideoResources")
+}
+
+model GaleraSanta {
+  id        Int    @id @default(autoincrement())
+  descricao String @db.NVarChar(Max)
+
+  @@map("GaleraSanta")
+}
+
+model EncontroDescricoes {
+  id         Int    @id @default(autoincrement()) @map("Id")
+  ordem      Int    @map("Ordem")
+  texto      String @db.NVarChar(2048) @map("Texto")
+  encontroId Int    @map("EncontroId")
+
+  @@map("EncontroDescricoes")
+}
+
+model Song {
+  id        Int     @id @default(autoincrement()) @map("Id")
+  nome      String  @db.NVarChar(180) @map("Nome")
+  thumbnail String? @db.NVarChar(512) @map("Thumbnail")
+  spotify   String? @db.NVarChar(512) @map("Spotify")
+  deezer    String? @db.NVarChar(512) @map("Deezer")
+  youtube   String? @db.NVarChar(512) @map("Youtube")
+
+  @@map("Songs")
+}
+
+model Church {
+  id      Int     @id @default(autoincrement()) @map("Id")
+  nome    String  @db.NVarChar(180) @map("Nome")
+  horario String? @db.NVarChar(120) @map("Horario")
+  local   String  @db.NVarChar(180) @map("Local")
+  maps    String? @db.NVarChar(512) @map("Maps")
+  redes   Rede[]
+  salasInfantis SalaInfantil[]
+
+  @@map("Churches")
+}
+
+model Curso {
+  id        Int     @id @default(autoincrement()) @map("Id")
+  titulo    String  @db.NVarChar(255) @map("Titulo")
+  descricao String? @db.NVarChar(Max) @map("Descricao")
+  idImagem  Int?    @map("IdImagem")
+  url       String? @db.NVarChar(512) @map("Url")
+
+  @@map("Courses")
+}
+
+model Imagem {
+  id             Int    @id @default(autoincrement()) @map("Id")
+  conteudoBase64 String @db.NVarChar(Max) @map("ConteudoBase64")
+  contentType    String @db.NVarChar(255) @map("ContentType")
+  eventos        Evento[]
+
+  @@map("Imagens")
+}
+
+model EdificandoEdicoes {
+  id    Int    @id @default(autoincrement()) @map("Id")
+  titulo String @db.NVarChar(180) @map("Titulo")
+  pdfs  EdificandoPdfs[]
+  videos EdificandoVideos[]
+
+  @@map("EdificandoEdicoes")
+}
+
+model EdificandoPdfs {
+  id                  Int    @id @default(autoincrement()) @map("Id")
+  titulo              String @db.NVarChar(180) @map("Titulo")
+  url                 String @db.NVarChar(512) @map("Url")
+  edificandoEdicaoId  Int    @map("EdificandoEdicaoId")
+  edificandoEdicao    EdificandoEdicoes @relation(fields: [edificandoEdicaoId], references: [id], onDelete: Cascade)
+
+  @@map("EdificandoPdfs")
+}
+
+model EdificandoVideos {
+  id                  Int    @id @default(autoincrement()) @map("Id")
+  titulo              String @db.NVarChar(180) @map("Titulo")
+  url                 String @db.NVarChar(512) @map("Url")
+  edificandoEdicaoId  Int    @map("EdificandoEdicaoId")
+  edificandoEdicao    EdificandoEdicoes @relation(fields: [edificandoEdicaoId], references: [id], onDelete: Cascade)
+
+  @@map("EdificandoVideos")
+}
+
+model Usuario {
+  id                   Int      @id @default(autoincrement()) @map("Id")
+  nomeCompleto         String   @db.NVarChar(180) @map("NomeCompleto")
+  email                String   @db.NVarChar(180) @map("Email")
+  telefone             String?  @db.NVarChar(20) @map("Telefone")
+  dataNascimento       String?  @db.NVarChar(10) @map("DataNascimento")
+  rede                 String?  @db.NVarChar(100) @map("Rede")
+  tipoUsuario          String   @db.NVarChar(36) @map("tipoUsuario")
+  flgParticipaMVV      Boolean  @map("flgParticipaMVV")
+  flgAceitoNotificacao Boolean  @map("flgAceitoNotificacao")
+  flgAceitoEmail       Boolean  @map("flgAceitoEmail")
+  flgAtivo             Boolean  @map("flgAtivo")
+  senha                String?  @db.VarChar(50) @map("Senha")
+
+  @@map("Usuario")
+}

@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MVV App Gestão
 
-## Getting Started
+Sistema administrativo WEB para gerenciar informações exibidas no aplicativo mobile MVV.
 
-First, run the development server:
+## Stack
+
+- **Next.js 14** – Framework React
+- **React 18** – UI
+- **Node.js** – Runtime
+- **API REST** – Rotas internas do Next.js (`/api/*`)
+- **SQLite** – Banco de dados relacional (via Prisma)
+- **Prisma** – ORM
+- **Tailwind CSS** – Estilização
+
+## Como rodar localmente
+
+### 1. Instalar dependências
+
+```bash
+npm install
+```
+
+### 2. Configurar banco de dados
+
+O projeto usa SQLite por padrão. O arquivo `.env` já contém:
+
+```
+DATABASE_URL="file:./dev.db"
+```
+
+Criar o schema do banco:
+
+```bash
+npm run db:push
+```
+
+### 3. Iniciar o servidor
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse [http://localhost:3000](http://localhost:3000). Use o link **"Acessar Painel Administrativo"** ou vá diretamente para [http://localhost:3000/admin](http://localhost:3000/admin).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Funcionalidades
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Eventos
 
-## Learn More
+- CRUD completo (listar, cadastrar, editar, excluir)
+- Campos: Título, Descrição, ID Imagem, URL
 
-To learn more about Next.js, take a look at the following resources:
+### Redes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- CRUD completo
+- Usadas como referência para membros
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Membros
 
-## Deploy on Vercel
+- CRUD completo
+- Validação de email e dados obrigatórios
+- Filtros por rede, tipo de usuário e busca por nome/email/telefone
+- Campos: Nome, Email, Telefone, Data Nascimento, Rede, Tipo Usuário, Participa MVV, Aceita Notificações, Aceita Email
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Total de membros
+- Membros por rede
+- Distribuição por tipo de usuário
+- Comparativo por faixa etária:
+  - Até 17
+  - 18 a 25
+  - 26 a 35
+  - 36 a 50
+  - Acima de 50
+
+## Estrutura do projeto
+
+```
+src/
+├── app/
+│   ├── api/           # API REST
+│   │   ├── dashboard/
+│   │   ├── eventos/
+│   │   ├── membros/
+│   │   └── redes/
+│   ├── admin/         # Páginas administrativas
+│   └── page.tsx       # Página inicial
+└── lib/
+    ├── prisma.ts      # Cliente Prisma
+    └── utils.ts       # Utilitários (ex: geração de ID hex)
+
+prisma/
+├── schema.prisma      # Modelos do banco
+└── dev.db             # Banco SQLite (gerado)
+```
+
+## Scripts disponíveis
+
+| Comando          | Descrição                    |
+|------------------|------------------------------|
+| `npm run dev`    | Inicia o servidor de desenvolvimento |
+| `npm run build`  | Gera Prisma Client e faz build |
+| `npm run start`  | Inicia o servidor de produção |
+| `npm run db:push`| Sincroniza o schema com o banco |
+| `npm run db:migrate` | Cria migrações Prisma    |
