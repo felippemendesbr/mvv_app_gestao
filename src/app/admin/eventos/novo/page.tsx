@@ -7,6 +7,14 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
+interface EventoRequestBody {
+  title: string;
+  description: string;
+  idImagem: number;
+  url: string;
+  imagemBase64?: string | null;
+  imagemContentType?: string | null;
+}
 export default function NovoEventoPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -64,7 +72,7 @@ export default function NovoEventoPage() {
     setLoading(true);
     setError(null);
     try {
-      const body: any = {
+      const body: EventoRequestBody = {
         ...form,
       };
       if (imagemBase64 && imagemContentType) {

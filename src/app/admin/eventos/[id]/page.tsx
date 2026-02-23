@@ -15,6 +15,11 @@ interface Evento {
   url: string;
 }
 
+interface EditEventoRequestBody extends Evento {
+  imagemBase64?: string | null;
+  imagemContentType?: string | null;
+}
+
 export default function EditarEventoPage() {
   const router = useRouter();
   const params = useParams();
@@ -87,7 +92,7 @@ export default function EditarEventoPage() {
     setSaving(true);
     setError(null);
     try {
-      const body: any = {
+      const body: EditEventoRequestBody = {
         ...form,
       };
       if (imagemBase64 && imagemContentType) {
