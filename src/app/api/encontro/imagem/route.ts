@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthFromRequest, isAdmin } from "@/lib/api";
 
+export const dynamic = "force-dynamic";
+
 const ALLOWED_CONTENT_TYPE = /^data:image\/(webp|png|jpeg|jpg)(;base64)?$/i;
 
 /**
@@ -22,7 +24,15 @@ export async function GET() {
         conteudoBase64: encontro.imagem.conteudoBase64,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    const isP2021 =
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      (error as { code?: string }).code === "P2021";
+    if (isP2021) {
+      return NextResponse.json({ imagem: null });
+    }
     console.error("Erro ao buscar imagem do Encontro:", error);
     return NextResponse.json(
       { error: "Erro ao carregar imagem" },

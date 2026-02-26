@@ -8,6 +8,8 @@ import {
 } from "@/lib/api";
 import { parseDateLocal } from "@/lib/dateUtils";
 
+export const dynamic = "force-dynamic";
+
 function isLider(tipo: string | null): boolean {
   if (!tipo) return false;
   return /líder|lider/i.test(tipo.trim());

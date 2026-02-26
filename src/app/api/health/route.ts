@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/health
  * Verifica se a API e o banco estão acessíveis (útil para diagnóstico em produção).
