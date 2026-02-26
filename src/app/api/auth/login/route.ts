@@ -15,8 +15,8 @@ export async function POST(request: Request) {
 
     const usuario = await prisma.usuario.findFirst({
       where: {
-        email: email,
-        senha: senha,
+        email: String(email).trim(),
+        senha: String(senha),
       },
     });
 
@@ -41,9 +41,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Retorna dados do usuário (sem a senha)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { senha: _, ...usuarioSemSenha } = usuario;
+    const usuarioSemSenha = {
+      id: usuario.id,
+      nomeCompleto: usuario.nomeCompleto,
+      email: usuario.email,
+      telefone: usuario.telefone,
+      dataNascimento: usuario.dataNascimento,
+      rede: usuario.rede,
+      tipoUsuario: usuario.tipoUsuario,
+      flgParticipaMVV: usuario.flgParticipaMVV,
+      flgAceitoNotificacao: usuario.flgAceitoNotificacao,
+      flgAceitoEmail: usuario.flgAceitoEmail,
+      flgAtivo: usuario.flgAtivo,
+    };
 
     return NextResponse.json({
       success: true,
@@ -51,6 +61,8 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Erro ao fazer login:", error);
+    const message = error instanceof Error ? error.message : "Erro desconhecido";
+    console.error("Detalhe:", message);
     return NextResponse.json(
       { error: "Erro ao processar login" },
       { status: 500 }
