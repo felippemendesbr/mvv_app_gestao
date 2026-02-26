@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+export async function GET() {
+  return NextResponse.json(
+    { error: "Método não permitido. Use POST com email e senha no corpo (JSON)." },
+    { status: 405 }
+  );
+}
+
 export async function POST(request: Request) {
   try {
     let body: { email?: unknown; senha?: unknown };
