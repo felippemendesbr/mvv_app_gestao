@@ -87,11 +87,21 @@ model GaleraSanta {
   @@map("GaleraSanta")
 }
 
+model Encontro {
+  id        Int     @id @default(autoincrement()) @map("Id")
+  idImagem  Int?    @map("IdImagem")
+  imagem    Imagem? @relation(fields: [idImagem], references: [id], onDelete: SetNull)
+  descricoes EncontroDescricoes[]
+
+  @@map("Encontro")
+}
+
 model EncontroDescricoes {
-  id         Int    @id @default(autoincrement()) @map("Id")
-  ordem      Int    @map("Ordem")
-  texto      String @db.NVarChar(2048) @map("Texto")
-  encontroId Int    @map("EncontroId")
+  id         Int     @id @default(autoincrement()) @map("Id")
+  ordem      Int     @map("Ordem")
+  texto      String  @db.NVarChar(2048) @map("Texto")
+  encontroId Int     @map("EncontroId")
+  encontro   Encontro @relation(fields: [encontroId], references: [id])
 
   @@map("EncontroDescricoes")
 }
@@ -130,10 +140,11 @@ model Curso {
 }
 
 model Imagem {
-  id             Int    @id @default(autoincrement()) @map("Id")
-  conteudoBase64 String @db.NVarChar(Max) @map("ConteudoBase64")
-  contentType    String @db.NVarChar(255) @map("ContentType")
+  id             Int       @id @default(autoincrement()) @map("Id")
+  conteudoBase64 String    @db.NVarChar(Max) @map("ConteudoBase64")
+  contentType    String    @db.NVarChar(255) @map("ContentType")
   eventos        Evento[]
+  encontros      Encontro[]
 
   @@map("Imagens")
 }

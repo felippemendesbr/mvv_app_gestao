@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { authFetch } from "@/lib/api";
+import { parseDateLocal } from "@/lib/dateUtils";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
@@ -53,9 +54,12 @@ export default function EditarMembroPage() {
         setForm({
           ...data,
           redeId,
-          dataNascimento: data.dataNascimento
-            ? String(data.dataNascimento).split("T")[0]
-            : "",
+          dataNascimento: (() => {
+            const p = parseDateLocal(data.dataNascimento);
+            return p
+              ? `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`
+              : "";
+          })(),
         });
         setRedes(redeList);
       } catch (e) {

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, X, UserCheck } from "lucide-react";
+import { Check, X, UserCheck, Filter } from "lucide-react";
 import { authFetch } from "@/lib/api";
+import { useAuth, isAdmin } from "@/contexts/AuthContext";
 import { DataGridPaginated, type Column } from "@/components/admin/DataGridPaginated";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -18,16 +19,25 @@ interface UsuarioPendente {
 }
 
 export default function AprovarMembrosPage() {
+  const { usuario } = useAuth();
   const [usuarios, setUsuarios] = useState<UsuarioPendente[]>([]);
+  const [redes, setRedes] = useState<{ id: number; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState<number | null>(null);
+  const [filtroRede, setFiltroRede] = useState("");
+  const [filtroTipo, setFiltroTipo] = useState("");
+  const [opcoesRedes, setOpcoesRedes] = useState<{ id: number; label: string }[]>([]);
+  const [opcoesTipos, setOpcoesTipos] = useState<{ id: number; label: string }[]>([]);
 
   async function load() {
     setLoading(true);
     setError(null);
     try {
-      const res = await authFetch("/api/aprovar-membros");
+      const params = new URLSearchParams();
+      if (filtroRede) params.set("rede", filtroRede);
+      if (filtroTipo) params.set("tipoUsuario", filtroTipo);
+      const res = await authFetch(`/api/aprovar-membros?${params}`);
       if (!res.ok) throw new Error("Erro ao carregar");
       const data = await res.json();
       setUsuarios(data);
@@ -39,8 +49,25 @@ export default function AprovarMembrosPage() {
   }
 
   useEffect(() => {
+    if (!isAdmin(usuario?.tipoUsuario ?? "")) return;
+    Promise.all([
+      fetch("/api/redes").then((r) => (r.ok ? r.json() : [])),
+      authFetch("/api/tipo-usuario").then((r) => (r.ok ? r.json() : [])),
+    ]).then(([redesRes, tiposRes]) => {
+      const redesList = Array.isArray(redesRes) ? redesRes : [];
+      setOpcoesRedes(
+        redesList.map((r: { id: number; label: string }) => ({ id: r.id, label: r.label }))
+      );
+      const tiposList = Array.isArray(tiposRes) ? tiposRes : [];
+      setOpcoesTipos(
+        tiposList.map((t: { id: number; label: string }) => ({ id: t.id, label: t.label }))
+      );
+    });
+  }, [usuario?.tipoUsuario]);
+
+  useEffect(() => {
     load();
-  }, []);
+  }, [filtroRede, filtroTipo]);
 
   async function handleAprovar(u: UsuarioPendente) {
     if (!confirm(`Aprovar o cadastro de ${u.nomeCompleto}?`)) return;
@@ -53,7 +80,7 @@ export default function AprovarMembrosPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao aprovar");
-      setUsuarios((prev) => prev.filter((x) => x.id !== u.id));
+      await load();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Erro ao aprovar");
     } finally {
@@ -77,7 +104,7 @@ export default function AprovarMembrosPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao reprovar");
-      setUsuarios((prev) => prev.filter((x) => x.id !== u.id));
+      await load();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Erro ao reprovar");
     } finally {
@@ -175,7 +202,7 @@ export default function AprovarMembrosPage() {
           <h1 className="text-3xl font-bold text-[var(--foreground)]">Aprovar Membros</h1>
         </div>
         <p className="text-[var(--foreground)]/80 mt-1">
-          Usuários aguardando aprovação (flgAtivo = 0)
+          Usuários aguardando aprovação
         </p>
       </div>
 
@@ -183,6 +210,53 @@ export default function AprovarMembrosPage() {
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
           {error}
         </div>
+      )}
+
+      {isAdmin(usuario?.tipoUsuario ?? "") && (
+        <Card>
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Filter className="h-5 w-5 text-[var(--secondary)] shrink-0" />
+              <h3 className="font-bold text-[var(--foreground)]">Filtros</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                  Rede
+                </label>
+                <select
+                  value={filtroRede}
+                  onChange={(e) => setFiltroRede(e.target.value)}
+                  className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)]"
+                >
+                  <option value="">Todas</option>
+                  {opcoesRedes.map((r) => (
+                    <option key={r.id} value={r.label}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
+                  Tipo de membro
+                </label>
+                <select
+                  value={filtroTipo}
+                  onChange={(e) => setFiltroTipo(e.target.value)}
+                  className="w-full px-4 py-2 border border-[var(--border)] rounded-lg bg-[var(--background)] text-[var(--foreground)]"
+                >
+                  <option value="">Todos</option>
+                  {opcoesTipos.map((t) => (
+                    <option key={t.id} value={t.label}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        </Card>
       )}
 
       <Card>

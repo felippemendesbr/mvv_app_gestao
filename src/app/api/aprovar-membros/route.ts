@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
     }
 
-    const where: { flgAtivo: boolean; rede?: string } = { flgAtivo: false };
+    const where: { flgAtivo: boolean; rede?: string; tipoUsuario?: string } = {
+      flgAtivo: false,
+    };
 
     if (isPastor(tipo)) {
       const userRede = auth.rede?.trim();
@@ -26,6 +28,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json([]);
       }
       where.rede = userRede;
+    }
+
+    if (isAdmin(tipo)) {
+      const rede = request.nextUrl.searchParams.get("rede");
+      const tipoUsuario = request.nextUrl.searchParams.get("tipoUsuario");
+      if (rede?.trim()) where.rede = rede.trim();
+      if (tipoUsuario?.trim()) where.tipoUsuario = tipoUsuario.trim();
     }
 
     const usuarios = await prisma.usuario.findMany({

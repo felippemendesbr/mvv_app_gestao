@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Plus, Search, Filter, Pencil, Trash2 } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatDateLocal, parseDateLocal } from "@/lib/dateUtils";
 import { DataGridPaginated, type Column } from "@/components/admin/DataGridPaginated";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -100,8 +101,7 @@ export default function MembrosPage() {
   }
 
   function formatDate(s: string | null) {
-    if (!s) return "-";
-    return new Date(s).toLocaleDateString("pt-BR");
+    return formatDateLocal(s);
   }
 
   const columns: Column<Membro>[] = [
@@ -142,8 +142,11 @@ export default function MembrosPage() {
       key: "dataNascimento",
       label: "Nascimento",
       sortable: true,
-      sortValue: (m) =>
-        m.dataNascimento ? new Date(m.dataNascimento).getTime() : 0,
+      sortValue: (m) => {
+        if (!m.dataNascimento) return 0;
+        const p = parseDateLocal(m.dataNascimento);
+        return p ? p.year * 10000 + p.month * 100 + p.day : 0;
+      },
       render: (m) => (
         <span className="text-[var(--foreground)]/80 text-sm">
           {formatDate(m.dataNascimento)}

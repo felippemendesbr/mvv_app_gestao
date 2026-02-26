@@ -15,7 +15,7 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Users, Network, Video, ArrowRight, UserCheck, Cake, AlertTriangle } from "lucide-react";
+import { Users, Network, Video, ArrowRight, UserCheck, Cake, AlertTriangle, RefreshCw } from "lucide-react";
 import { StatCard } from "@/components/ui/StatCard";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -85,21 +85,36 @@ export default function DashboardPage() {
   const chartTooltipBg = isDark ? "#242329" : "#fff";
   const chartTooltipBorder = isDark ? "#3D3A45" : "#D7C7A3";
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await authFetch("/api/dashboard");
-        if (!res.ok) throw new Error("Erro ao carregar dados");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Erro desconhecido");
-      } finally {
-        setLoading(false);
-      }
+  async function fetchData() {
+    try {
+      setLoading(true);
+      const res = await authFetch("/api/dashboard");
+      if (!res.ok) throw new Error("Erro ao carregar dados");
+      const json = await res.json();
+      setData(json);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro desconhecido");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (!data) return;
+      authFetch("/api/dashboard")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => json && setData(json))
+        .catch(() => {});
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [data]);
 
   if (loading) {
     return (
@@ -162,11 +177,23 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-[var(--foreground)]">Dashboard</h1>
-        <p className="text-[var(--foreground)]/80 mt-1 font-medium">
-          Visão geral do sistema de gestão
-        </p>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">Dashboard</h1>
+          <p className="text-[var(--foreground)]/80 mt-1 font-medium">
+            Visão geral do sistema de gestão
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          colorScheme="gold"
+          size="sm"
+          onClick={() => fetchData()}
+          disabled={loading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          Atualizar
+        </Button>
       </div>
 
       {/* Stats Cards */}

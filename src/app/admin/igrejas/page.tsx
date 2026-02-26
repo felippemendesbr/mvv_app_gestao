@@ -14,6 +14,8 @@ interface Church {
   horario: string | null;
   local: string;
   maps: string | null;
+  totalRedes?: number;
+  totalMembros?: number;
 }
 
 export default function IgrejasPage() {
@@ -62,6 +64,28 @@ export default function IgrejasPage() {
       label: "Local",
       sortable: true,
       exportValue: (c) => c.local,
+    },
+    {
+      key: "totalRedes",
+      label: "Redes",
+      sortable: true,
+      render: (c) => (
+        <span className="text-[var(--foreground)]/80 font-medium">
+          {c.totalRedes ?? 0}
+        </span>
+      ),
+      exportValue: (c) => String(c.totalRedes ?? 0),
+    },
+    {
+      key: "totalMembros",
+      label: "Membros",
+      sortable: true,
+      render: (c) => (
+        <span className="text-[var(--foreground)]/80 font-medium">
+          {c.totalMembros ?? 0}
+        </span>
+      ),
+      exportValue: (c) => String(c.totalMembros ?? 0),
     },
     {
       key: "horario",

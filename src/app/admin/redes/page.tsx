@@ -15,6 +15,7 @@ interface Rede {
   churchId?: number | null;
   churchNome?: string | null;
   _count?: { membros: number };
+  pastorNome?: string | null;
 }
 
 export default function RedesPage() {
@@ -84,6 +85,18 @@ export default function RedesPage() {
         </span>
       ),
       exportValue: (r) => r.churchNome ?? "—",
+    },
+    {
+      key: "pastorNome",
+      label: "Pastor",
+      sortable: true,
+      sortValue: (r) => r.pastorNome ?? "",
+      render: (r) => (
+        <span className="text-[var(--foreground)]">
+          {r.pastorNome ?? "—"}
+        </span>
+      ),
+      exportValue: (r) => r.pastorNome ?? "—",
     },
     {
       key: "membros",

@@ -6,6 +6,7 @@ import {
   isPastor,
   needsRedeFilter,
 } from "@/lib/api";
+import { parseDateLocal } from "@/lib/dateUtils";
 
 function isLider(tipo: string | null): boolean {
   if (!tipo) return false;
@@ -63,7 +64,8 @@ export async function GET(request: NextRequest) {
       });
       distribuicaoTipoUsuario = Array.from(tiposMap.entries())
         .filter(([tipo]) => !/administrador/i.test(tipo))
-        .map(([tipo, quantidade]) => ({ tipo, quantidade }));
+        .map(([tipo, quantidade]) => ({ tipo, quantidade }))
+        .sort((a, b) => b.quantidade - a.quantidade);
     }
 
     // Total de líderes (membros com tipoUsuario contendo "Líder")
@@ -79,9 +81,19 @@ export async function GET(request: NextRequest) {
       "Acima de 50": 0,
     };
 
+    // Faixas etárias (idade pelo ano e mês/dia local, sem deslocar por timezone)
+    const anoHoje = hoje.getFullYear();
     membros.forEach((m) => {
       if (!m.dataNascimento) return;
-      const idade = hoje.getFullYear() - new Date(m.dataNascimento).getFullYear();
+      const p = parseDateLocal(m.dataNascimento);
+      if (!p) return;
+      let idade = anoHoje - p.year;
+      if (
+        hoje.getMonth() + 1 < p.month ||
+        (hoje.getMonth() + 1 === p.month && hoje.getDate() < p.day)
+      ) {
+        idade--;
+      }
       if (idade <= 17) faixas["Até 17"]++;
       else if (idade <= 25) faixas["18 a 25"]++;
       else if (idade <= 35) faixas["26 a 35"]++;
@@ -98,28 +110,31 @@ export async function GET(request: NextRequest) {
     const showTiposUsuario = isAdmin(userTipo);
     const showVideos = isAdmin(userTipo);
 
-    // Aniversariantes do mês: dia atual e maiores (admin e pastor)
+    // Aniversariantes do mês: dia civil (local), sem timezone
     const mesAtual = hoje.getMonth() + 1;
     const diaAtual = hoje.getDate();
     const aniversariantes = membros
       .filter((m) => {
         if (!m.dataNascimento) return false;
-        const d = new Date(m.dataNascimento);
-        const mes = d.getMonth() + 1;
-        const dia = d.getDate();
-        return mes === mesAtual && dia >= diaAtual;
+        const p = parseDateLocal(m.dataNascimento);
+        if (!p) return false;
+        return p.month === mesAtual && p.day >= diaAtual;
       })
       .sort((a, b) => {
-        const diaA = new Date(a.dataNascimento!).getDate();
-        const diaB = new Date(b.dataNascimento!).getDate();
-        return diaA - diaB;
+        const pA = parseDateLocal(a.dataNascimento!);
+        const pB = parseDateLocal(b.dataNascimento!);
+        if (!pA || !pB) return 0;
+        return pA.day - pB.day;
       })
-      .map((m) => ({
-        dia: new Date(m.dataNascimento!).getDate(),
-        nomeCompleto: m.nomeCompleto,
-        rede: m.rede ?? null,
-        telefone: m.telefone ?? null,
-      }));
+      .map((m) => {
+        const p = parseDateLocal(m.dataNascimento!);
+        return {
+          dia: p?.day ?? 0,
+          nomeCompleto: m.nomeCompleto,
+          rede: m.rede ?? null,
+          telefone: m.telefone ?? null,
+        };
+      });
 
     return NextResponse.json({
       membrosPorRede,

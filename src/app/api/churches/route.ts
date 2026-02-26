@@ -5,8 +5,38 @@ export async function GET() {
   try {
     const churches = await prisma.church.findMany({
       orderBy: { nome: "asc" },
+      include: {
+        redes: { select: { id: true, label: true } },
+      },
     });
-    return NextResponse.json(churches);
+
+    const labelsPorIgreja = new Map<number, string[]>();
+    churches.forEach((c) => {
+      labelsPorIgreja.set(
+        c.id,
+        c.redes.map((r) => r.label)
+      );
+    });
+
+    const todosMembros = await prisma.membro.findMany({
+      select: { rede: true },
+    });
+
+    const result = churches.map((c) => {
+      const labels = labelsPorIgreja.get(c.id) ?? [];
+      const totalRedes = labels.length;
+      const totalMembros = todosMembros.filter(
+        (m) => m.rede != null && labels.includes(m.rede)
+      ).length;
+      const { redes: _, ...church } = c;
+      return {
+        ...church,
+        totalRedes,
+        totalMembros,
+      };
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Erro ao buscar igrejas:", error);
     return NextResponse.json(
