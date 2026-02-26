@@ -28,9 +28,12 @@ export async function GET() {
       const totalMembros = todosMembros.filter(
         (m) => m.rede != null && labels.includes(m.rede)
       ).length;
-      const { redes: _, ...church } = c;
       return {
-        ...church,
+        id: c.id,
+        nome: c.nome,
+        horario: c.horario,
+        local: c.local,
+        maps: c.maps,
         totalRedes,
         totalMembros,
       };

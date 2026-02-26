@@ -274,6 +274,7 @@ export default function EncontroPage() {
         <CardContent className="space-y-4">
           {(imagem?.conteudoBase64 || imagemBase64) && (
             <div className="rounded-lg overflow-hidden border border-slate-200 bg-slate-50 max-w-md">
+              {/* eslint-disable-next-line @next/next/no-img-element -- imagem base64 dinâmica, não adequada a next/image */}
               <img
                 src={
                   imagemBase64 && imagemContentType

@@ -36,6 +36,7 @@ export default function SalaInfantilPage() {
       return;
     }
     fetchSalas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch apenas ao montar/validar admin
   }, [usuario, router]);
 
   async function fetchSalas() {

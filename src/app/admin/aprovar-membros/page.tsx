@@ -21,7 +21,6 @@ interface UsuarioPendente {
 export default function AprovarMembrosPage() {
   const { usuario } = useAuth();
   const [usuarios, setUsuarios] = useState<UsuarioPendente[]>([]);
-  const [redes, setRedes] = useState<{ id: number; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acting, setActing] = useState<number | null>(null);
@@ -67,6 +66,7 @@ export default function AprovarMembrosPage() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load depende de filtroRede/filtroTipo, chamado ao mudar filtros
   }, [filtroRede, filtroTipo]);
 
   async function handleAprovar(u: UsuarioPendente) {
