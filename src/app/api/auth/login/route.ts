@@ -3,8 +3,18 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email, senha } = body;
+    let body: { email?: unknown; senha?: unknown };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Corpo da requisição inválido" },
+        { status: 400 }
+      );
+    }
+
+    const email = body?.email != null ? String(body.email).trim() : "";
+    const senha = body?.senha != null ? String(body.senha) : "";
 
     if (!email || !senha) {
       return NextResponse.json(
@@ -15,8 +25,8 @@ export async function POST(request: Request) {
 
     const usuario = await prisma.usuario.findFirst({
       where: {
-        email: String(email).trim(),
-        senha: String(senha),
+        email,
+        senha,
       },
     });
 
@@ -60,9 +70,10 @@ export async function POST(request: Request) {
       usuario: usuarioSemSenha,
     });
   } catch (error) {
-    console.error("Erro ao fazer login:", error);
-    const message = error instanceof Error ? error.message : "Erro desconhecido";
-    console.error("Detalhe:", message);
+    const message = error instanceof Error ? error.message : String(error);
+    const name = error instanceof Error ? error.name : "Error";
+    console.error("[login] Erro:", name, message);
+    if (error instanceof Error && error.stack) console.error("[login] Stack:", error.stack);
     return NextResponse.json(
       { error: "Erro ao processar login" },
       { status: 500 }
