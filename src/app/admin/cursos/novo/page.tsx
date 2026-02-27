@@ -14,19 +14,56 @@ export default function NovoCursoPage() {
   const [form, setForm] = useState({
     titulo: "",
     descricao: "",
-    idImagem: 0,
     url: "",
   });
+  const [imagemBase64, setImagemBase64] = useState<string | null>(null);
+  const [imagemContentType, setImagemContentType] = useState<string | null>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setImagemBase64(null);
+      setImagemContentType(null);
+      return;
+    }
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setError("Formato inválido. Use PNG, JPG, JPEG ou WEBP.");
+      setImagemBase64(null);
+      setImagemContentType(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string") {
+        const [prefix, data] = result.split(",", 2);
+        if (!data) {
+          setError("Erro ao ler a imagem.");
+          return;
+        }
+        setImagemBase64(data);
+        setImagemContentType(prefix);
+      }
+    };
+    reader.onerror = () => setError("Erro ao ler a imagem.");
+    reader.readAsDataURL(file);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     try {
+      const body: Record<string, unknown> = { ...form };
+      if (imagemBase64 && imagemContentType) {
+        body.imagemBase64 = imagemBase64;
+        body.imagemContentType = imagemContentType;
+      }
       const res = await fetch("/api/cursos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao criar");
@@ -94,20 +131,13 @@ export default function NovoCursoPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                ID Imagem
+                Imagem (PNG, JPG, JPEG ou WEBP)
               </label>
               <input
-                type="number"
-                min={0}
-                value={form.idImagem || ""}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    idImagem: parseInt(e.target.value, 10) || 0,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-[#D7C7A3] rounded-lg focus:ring-2 focus:ring-[#A47C3B]/30 focus:border-[#A47C3B] transition-colors"
-                placeholder="0"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={handleFileChange}
+                className="w-full text-sm text-slate-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#A47C3B]/10 file:text-[#A47C3B] hover:file:bg-[#A47C3B]/20"
               />
             </div>
             <div>

@@ -155,6 +155,7 @@ export default function EventosPage() {
             getRowId={(e) => e.id}
             emptyMessage="Nenhum evento cadastrado"
             exportFileName="eventos"
+            defaultPageSize={9999}
           />
         </div>
       </Card>

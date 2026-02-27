@@ -1,14 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+const ALLOWED_CONTENT_TYPES = [
+  "data:image/png;base64",
+  "data:image/jpeg;base64",
+  "data:image/jpg;base64",
+  "data:image/webp;base64",
+  "data:image/webp",
+];
+
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id } = await params;
+    const idNum = parseInt(id, 10);
     const curso = await prisma.curso.findUnique({
-      where: { id },
+      where: { id: idNum },
+      include: { imagem: true },
     });
 
     if (!curso) {
@@ -30,12 +40,13 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id } = await params;
+    const idNum = parseInt(id, 10);
     const body = await request.json();
-    const { titulo, descricao, idImagem, url } = body;
+    const { titulo, descricao, url, imagemBase64, imagemContentType } = body;
 
     if (!titulo) {
       return NextResponse.json(
@@ -44,14 +55,45 @@ export async function PUT(
       );
     }
 
+    const updateData: {
+      titulo: string;
+      descricao: string | null;
+      url: string | null;
+      idImagem?: number | null;
+    } = {
+      titulo,
+      descricao: descricao ?? null,
+      url: url ?? null,
+    };
+
+    if (imagemBase64 && imagemContentType) {
+      if (
+        typeof imagemBase64 !== "string" ||
+        typeof imagemContentType !== "string"
+      ) {
+        return NextResponse.json(
+          { error: "Dados da imagem são inválidos" },
+          { status: 400 }
+        );
+      }
+      if (!ALLOWED_CONTENT_TYPES.includes(imagemContentType)) {
+        return NextResponse.json(
+          { error: "Formato de imagem não permitido" },
+          { status: 400 }
+        );
+      }
+      const imagem = await prisma.imagem.create({
+        data: {
+          conteudoBase64: imagemBase64,
+          contentType: imagemContentType,
+        },
+      });
+      updateData.idImagem = imagem.id;
+    }
+
     const curso = await prisma.curso.update({
-      where: { id },
-      data: {
-        titulo,
-        descricao: descricao || null,
-        idImagem: idImagem != null ? Number(idImagem) : null,
-        url: url || null,
-      },
+      where: { id: idNum },
+      data: updateData,
     });
 
     return NextResponse.json(curso);
@@ -65,13 +107,14 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id } = await params;
+    const idNum = parseInt(id, 10);
     await prisma.curso.delete({
-      where: { id },
+      where: { id: idNum },
     });
 
     return NextResponse.json({ success: true });

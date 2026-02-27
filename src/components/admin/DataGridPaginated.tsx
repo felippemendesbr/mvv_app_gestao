@@ -33,6 +33,7 @@ interface DataGridPaginatedProps<T> {
   getRowId: (item: T) => string | number;
   emptyMessage?: string;
   exportFileName?: string;
+  defaultPageSize?: number;
 }
 
 type SortDir = "asc" | "desc" | null;
@@ -43,11 +44,12 @@ export function DataGridPaginated<T>({
   getRowId,
   emptyMessage = "Nenhum registro encontrado",
   exportFileName = "dados",
+  defaultPageSize = 20,
 }: DataGridPaginatedProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -278,6 +280,7 @@ export function DataGridPaginated<T>({
               <option value={20}>20</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
+              <option value={9999}>Todos</option>
             </select>
           </div>
 

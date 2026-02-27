@@ -7,12 +7,19 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
+interface Imagem {
+  id: number;
+  conteudoBase64: string;
+  contentType: string;
+}
+
 interface Curso {
   id: number;
   titulo: string;
   descricao: string | null;
   idImagem: number | null;
   url: string | null;
+  imagem?: Imagem | null;
 }
 
 export default function EditarCursoPage() {
@@ -23,6 +30,39 @@ export default function EditarCursoPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<Curso | null>(null);
+  const [imagemBase64, setImagemBase64] = useState<string | null>(null);
+  const [imagemContentType, setImagemContentType] = useState<string | null>(null);
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setImagemBase64(null);
+      setImagemContentType(null);
+      return;
+    }
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setError("Formato inválido. Use PNG, JPG, JPEG ou WEBP.");
+      setImagemBase64(null);
+      setImagemContentType(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (typeof result === "string") {
+        const [prefix, data] = result.split(",", 2);
+        if (!data) {
+          setError("Erro ao ler a imagem.");
+          return;
+        }
+        setImagemBase64(data);
+        setImagemContentType(prefix);
+      }
+    };
+    reader.onerror = () => setError("Erro ao ler a imagem.");
+    reader.readAsDataURL(file);
+  }
 
   useEffect(() => {
     async function load() {
@@ -46,10 +86,19 @@ export default function EditarCursoPage() {
     setSaving(true);
     setError(null);
     try {
+      const body: Record<string, unknown> = {
+        titulo: form.titulo,
+        descricao: form.descricao,
+        url: form.url,
+      };
+      if (imagemBase64 && imagemContentType) {
+        body.imagemBase64 = imagemBase64;
+        body.imagemContentType = imagemContentType;
+      }
       const res = await fetch(`/api/cursos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erro ao atualizar");
@@ -140,22 +189,39 @@ export default function EditarCursoPage() {
                 className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
               />
             </div>
+            {(form.imagem || imagemBase64) && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Preview da imagem
+                </label>
+                <div className="w-40 h-28 border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                  <img
+                    src={
+                      imagemBase64 && imagemContentType
+                        ? `${imagemContentType},${imagemBase64}`
+                        : form.imagem
+                          ? `${form.imagem.contentType},${form.imagem.conteudoBase64}`
+                          : ""
+                    }
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                ID Imagem
+                Nova imagem (PNG, JPG, JPEG ou WEBP) – opcional
               </label>
               <input
-                type="number"
-                min={0}
-                value={form.idImagem ?? ""}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    idImagem: e.target.value ? parseInt(e.target.value, 10) : null,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={handleFileChange}
+                className="w-full text-sm text-slate-700 file:mr-4 file:py-2.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#A47C3B]/10 file:text-[#A47C3B] hover:file:bg-[#A47C3B]/20"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Deixe em branco para manter a imagem atual. Trocar a URL abaixo não altera a imagem.
+              </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">

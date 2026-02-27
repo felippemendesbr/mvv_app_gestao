@@ -135,6 +135,7 @@ model Curso {
   descricao String? @db.NVarChar(Max) @map("Descricao")
   idImagem  Int?    @map("IdImagem")
   url       String? @db.NVarChar(512) @map("Url")
+  imagem    Imagem? @relation(fields: [idImagem], references: [id], onDelete: SetNull)
 
   @@map("Courses")
 }
@@ -145,6 +146,7 @@ model Imagem {
   contentType    String    @db.NVarChar(255) @map("ContentType")
   eventos        Evento[]
   encontros      Encontro[]
+  cursos         Curso[]
 
   @@map("Imagens")
 }
