@@ -79,6 +79,7 @@ export default function DashboardPage() {
   const [anivPage, setAnivPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pieOuterRadius, setPieOuterRadius] = useState(120);
 
   const chartTextColor = isDark ? "#EDE6D6" : "#242D3F";
   const chartGridColor = isDark ? "#3D3A45" : "#D7C7A3";
@@ -102,6 +103,19 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    function updatePieRadius() {
+      if (window.innerWidth < 640) {
+        setPieOuterRadius(90);
+      } else {
+        setPieOuterRadius(120);
+      }
+    }
+    updatePieRadius();
+    window.addEventListener("resize", updatePieRadius);
+    return () => window.removeEventListener("resize", updatePieRadius);
   }, []);
 
   useEffect(() => {
@@ -359,7 +373,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Comparativo por Faixa Etária</CardTitle>
           </CardHeader>
-          <CardContent className="h-96">
+          <CardContent className="h-[28rem] md:h-96">
             {data.comparativoFaixaEtaria.every((f) => f.quantidade === 0) ? (
               <p className="text-[var(--foreground)]/70 text-sm py-8 text-center font-medium">
                 Sem dados de faixa etária
@@ -373,7 +387,7 @@ export default function DashboardPage() {
                   nameKey="faixa"
                   cx="50%"
                   cy="50%"
-                  outerRadius={120}
+                  outerRadius={pieOuterRadius}
                   label={({ x, y, name, value }: { x?: number; y?: number; name?: string; value?: number }) =>
                     (value ?? 0) > 0 && x != null && y != null
                       ? (

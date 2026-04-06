@@ -5,6 +5,11 @@ export async function GET() {
   try {
     const [redes, membros, pastores] = await Promise.all([
       prisma.rede.findMany({
+        where: {
+          label: {
+            not: "# Não faço parte de nenhuma família",
+          },
+        },
         orderBy: { label: "asc" },
         include: { church: { select: { id: true, nome: true } } },
       }),

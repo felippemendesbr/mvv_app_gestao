@@ -12,7 +12,13 @@ const ALLOWED_CONTENT_TYPE = /^data:image\/(webp|png|jpeg|jpg)(;base64)?$/i;
 export async function GET() {
   try {
     const encontro = await prisma.encontro.findFirst({
+      where: {
+        idImagem: {
+          not: null,
+        },
+      },
       include: { imagem: true },
+      orderBy: { id: "desc" },
     });
     if (!encontro || !encontro.imagem) {
       return NextResponse.json({ imagem: null });

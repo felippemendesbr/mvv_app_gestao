@@ -7,12 +7,19 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
+interface Imagem {
+  id: number;
+  conteudoBase64: string;
+  contentType: string;
+}
+
 interface Evento {
   id: string;
   title: string;
   description: string;
   idImagem: number;
   url: string;
+  imagem?: Imagem | null;
 }
 
 interface EditEventoRequestBody extends Evento {
@@ -198,6 +205,24 @@ export default function EditarEventoPage() {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Imagem (PNG, JPG, JPEG, WEBP ou AVIF)
               </label>
+              {(form.imagem || imagemBase64) && (
+                <div className="mb-3">
+                  <div className="w-40 h-28 border border-slate-200 rounded-lg overflow-hidden bg-slate-50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        imagemBase64 && imagemContentType
+                          ? `${imagemContentType},${imagemBase64}`
+                          : form.imagem
+                          ? `${form.imagem.contentType},${form.imagem.conteudoBase64}`
+                          : ""
+                      }
+                      alt="Imagem do evento"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/jpg,image/webp,image/avif"

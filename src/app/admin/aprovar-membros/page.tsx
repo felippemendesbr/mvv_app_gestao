@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, X, UserCheck, Filter } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import { useAuth, isAdmin } from "@/contexts/AuthContext";
@@ -28,6 +28,17 @@ export default function AprovarMembrosPage() {
   const [filtroTipo, setFiltroTipo] = useState("");
   const [opcoesRedes, setOpcoesRedes] = useState<{ id: number; label: string }[]>([]);
   const [opcoesTipos, setOpcoesTipos] = useState<{ id: number; label: string }[]>([]);
+
+  const resumoPorRede = useMemo(() => {
+    const mapa = new Map<string, number>();
+    usuarios.forEach((u) => {
+      const rede = u.rede?.trim() || "Sem rede";
+      mapa.set(rede, (mapa.get(rede) ?? 0) + 1);
+    });
+    return Array.from(mapa.entries())
+      .map(([rede, quantidade]) => ({ rede, quantidade }))
+      .sort((a, b) => b.quantidade - a.quantidade || a.rede.localeCompare(b.rede));
+  }, [usuarios]);
 
   async function load() {
     setLoading(true);
@@ -210,6 +221,58 @@ export default function AprovarMembrosPage() {
         <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl">
           {error}
         </div>
+      )}
+
+      {isAdmin(usuario?.tipoUsuario ?? "") && resumoPorRede.length > 0 && (
+        <Card>
+          <div className="p-6 space-y-3">
+            <div>
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                Resumo de pendentes por rede
+              </h2>
+              <p className="text-sm text-[var(--foreground)]/70">
+                Quantidade de membros aguardando aprovação em cada rede.
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm border border-[var(--border)] rounded-lg overflow-hidden">
+                <thead className="bg-[var(--muted)]">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-semibold text-[var(--foreground)]">
+                      Rede
+                    </th>
+                    <th className="px-4 py-2 text-right font-semibold text-[var(--foreground)]">
+                      Qtde. pendente
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resumoPorRede.map((r) => (
+                    <tr
+                      key={r.rede}
+                      className="border-t border-[var(--border)] bg-[var(--background)]"
+                    >
+                      <td className="px-4 py-2 text-[var(--foreground)]">
+                        {r.rede}
+                      </td>
+                      <td className="px-4 py-2 text-right text-[var(--foreground)] font-medium">
+                        {r.quantidade}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t border-[var(--border)] bg-[var(--muted)]/50">
+                    <td className="px-4 py-2 font-semibold text-[var(--foreground)]">
+                      Total
+                    </td>
+                    <td className="px-4 py-2 text-right font-semibold text-[var(--foreground)]">
+                      {usuarios.length}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </Card>
       )}
 
       {isAdmin(usuario?.tipoUsuario ?? "") && (

@@ -93,7 +93,7 @@ model Encontro {
   imagem    Imagem? @relation(fields: [idImagem], references: [id], onDelete: SetNull)
   descricoes EncontroDescricoes[]
 
-  @@map("Encontro")
+  @@map("encontros")
 }
 
 model EncontroDescricoes {

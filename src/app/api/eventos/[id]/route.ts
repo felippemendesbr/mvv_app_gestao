@@ -17,6 +17,7 @@ export async function GET(
     const { id } = await params;
     const evento = await prisma.evento.findUnique({
       where: { id },
+      include: { imagem: true },
     });
     if (!evento) {
       return NextResponse.json({ error: "Evento não encontrado" }, { status: 404 });
