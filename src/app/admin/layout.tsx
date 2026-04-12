@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Calendar,
+  CalendarDays,
   Network,
   Users,
   ChevronRight,
@@ -37,6 +38,7 @@ const navigationBase = [
   { name: "Salas Infantis", href: "/admin/sala-infantil", icon: DoorOpen, adminOnly: true },
   { name: "Cursos", href: "/admin/cursos", icon: GraduationCap },
   { name: "Eventos", href: "/admin/eventos", icon: Calendar },
+  { name: "Agenda", href: "/admin/agenda-eventos", icon: CalendarDays },
   { name: "Redes", href: "/admin/redes", icon: Network },
   { name: "Membros", href: "/admin/membros", icon: Users },
   { name: "Edificando", href: "/admin/edificando", icon: Building2 },

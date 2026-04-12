@@ -1,54 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Save, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { authFetch } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import {
+  DEFAULT_QUILL_FORMATS,
+  getQuillModulesWithCompressedImages,
+} from "@/lib/quillDefaultModules";
 import "react-quill/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
-
-const modules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    [{ font: [] }],
-    [{ size: [] }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    [
-      { list: "ordered" },
-      { list: "bullet" },
-      { indent: "-1" },
-      { indent: "+1" },
-    ],
-    ["link", "image", "video"],
-    [{ color: [] }, { background: [] }],
-    [{ align: [] }],
-    ["clean"],
-  ],
-};
-
-const formats = [
-  "header",
-  "font",
-  "size",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "blockquote",
-  "list",
-  "bullet",
-  "indent",
-  "link",
-  "image",
-  "video",
-  "color",
-  "background",
-  "align",
-];
 
 export default function GaleraSantaPage() {
   const { canEdit } = useAuth();
@@ -57,6 +22,8 @@ export default function GaleraSantaPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [descricao, setDescricao] = useState("");
+
+  const quillModules = useMemo(() => getQuillModulesWithCompressedImages(), []);
 
   useEffect(() => {
     async function load() {
@@ -158,8 +125,8 @@ export default function GaleraSantaPage() {
                   theme="snow"
                   value={descricao}
                   onChange={setDescricao}
-                  modules={canEdit ? modules : { toolbar: false }}
-                  formats={formats}
+                  modules={canEdit ? quillModules : { toolbar: false }}
+                  formats={DEFAULT_QUILL_FORMATS}
                   readOnly={!canEdit}
                   className="h-96"
                   placeholder="Digite o conteúdo da descrição..."

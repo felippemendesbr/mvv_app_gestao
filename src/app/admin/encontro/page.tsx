@@ -1,56 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Save, AlertCircle, ImagePlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { useAuth } from "@/contexts/AuthContext";
 import { authFetch } from "@/lib/api";
+import { compressImageFileToBase64Parts } from "@/lib/compressImage";
+import {
+  DEFAULT_QUILL_FORMATS,
+  getQuillModulesWithCompressedImages,
+} from "@/lib/quillDefaultModules";
 import "react-quill/dist/quill.snow.css";
 
 const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 const IMAGEM_TIPOS = ["image/webp", "image/png", "image/jpeg", "image/jpg"];
-
-const modules = {
-  toolbar: [
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    [{ font: [] }],
-    [{ size: [] }],
-    ["bold", "italic", "underline", "strike", "blockquote"],
-    [
-      { list: "ordered" },
-      { list: "bullet" },
-      { indent: "-1" },
-      { indent: "+1" },
-    ],
-    ["link", "image", "video"],
-    [{ color: [] }, { background: [] }],
-    [{ align: [] }],
-    ["clean"],
-  ],
-};
-
-const formats = [
-  "header",
-  "font",
-  "size",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "blockquote",
-  "list",
-  "bullet",
-  "indent",
-  "link",
-  "image",
-  "video",
-  "color",
-  "background",
-  "align",
-];
 
 interface EncontroDescricao {
   id: number;
@@ -81,6 +47,8 @@ export default function EncontroPage() {
   const [imagemContentType, setImagemContentType] = useState<string | null>(null);
 
   const isAdmin = usuario ? /administrador/i.test(usuario.tipoUsuario) : false;
+
+  const quillModules = useMemo(() => getQuillModulesWithCompressedImages(), []);
 
   useEffect(() => {
     async function load() {
@@ -160,7 +128,7 @@ export default function EncontroPage() {
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) {
       setImagemBase64(null);
@@ -174,18 +142,15 @@ export default function EncontroPage() {
       return;
     }
     setError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === "string") {
-        const [prefix, data] = result.split(",", 2);
-        if (data) {
-          setImagemBase64(data);
-          setImagemContentType(prefix);
-        }
-      }
-    };
-    reader.readAsDataURL(file);
+    try {
+      const parts = await compressImageFileToBase64Parts(file);
+      setImagemBase64(parts.imagemBase64);
+      setImagemContentType(parts.imagemContentType);
+    } catch {
+      setError("Erro ao processar a imagem.");
+      setImagemBase64(null);
+      setImagemContentType(null);
+    }
   }
 
   async function handleEnviarImagem(e: React.FormEvent) {
@@ -334,8 +299,8 @@ export default function EncontroPage() {
                     theme="snow"
                     value={texto}
                     onChange={setTexto}
-                    modules={modules}
-                    formats={formats}
+                    modules={quillModules}
+                    formats={DEFAULT_QUILL_FORMATS}
                     className="h-96"
                     placeholder="Digite o conteúdo da descrição..."
                   />

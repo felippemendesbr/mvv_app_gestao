@@ -87,6 +87,19 @@ model GaleraSanta {
   @@map("GaleraSanta")
 }
 
+model AgendaEvento {
+  id          Int      @id @default(autoincrement()) @map("Id")
+  titulo      String   @db.NVarChar(180) @map("Titulo")
+  local       String   @db.NVarChar(180) @map("Local")
+  data        DateTime @map("Data")
+  descricao   String?  @db.NVarChar(1024) @map("Descricao")
+  tipoUsuario String?  @db.VarChar(100) @map("TipoUsuario")
+  perfil      String?  @db.VarChar(100) @map("Perfil")
+  rede        String?  @db.VarChar(100) @map("Rede")
+
+  @@map("AgendaEventos")
+}
+
 model Encontro {
   id        Int     @id @default(autoincrement()) @map("Id")
   idImagem  Int?    @map("IdImagem")

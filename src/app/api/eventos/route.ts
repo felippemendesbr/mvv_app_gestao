@@ -7,6 +7,7 @@ const ALLOWED_CONTENT_TYPES = [
   "data:image/jpeg;base64",
   "data:image/jpg;base64",
   "data:image/webp",
+  "data:image/webp;base64",
   "data:image/avif;base64",
 ];
 

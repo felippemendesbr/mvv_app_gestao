@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { compressImageFileToBase64Parts } from "@/lib/compressImage";
 
 export default function NovoCursoPage() {
   const router = useRouter();
@@ -19,7 +20,7 @@ export default function NovoCursoPage() {
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [imagemContentType, setImagemContentType] = useState<string | null>(null);
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) {
       setImagemBase64(null);
@@ -33,21 +34,16 @@ export default function NovoCursoPage() {
       setImagemContentType(null);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      if (typeof result === "string") {
-        const [prefix, data] = result.split(",", 2);
-        if (!data) {
-          setError("Erro ao ler a imagem.");
-          return;
-        }
-        setImagemBase64(data);
-        setImagemContentType(prefix);
-      }
-    };
-    reader.onerror = () => setError("Erro ao ler a imagem.");
-    reader.readAsDataURL(file);
+    setError(null);
+    try {
+      const parts = await compressImageFileToBase64Parts(file);
+      setImagemBase64(parts.imagemBase64);
+      setImagemContentType(parts.imagemContentType);
+    } catch {
+      setError("Erro ao processar a imagem.");
+      setImagemBase64(null);
+      setImagemContentType(null);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
