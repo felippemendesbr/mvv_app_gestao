@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
+export const dynamic = "force-dynamic";
+
+function buildPublicBaseUrl(request: Request): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  const headers = request.headers;
+  const host = headers.get("x-forwarded-host") || headers.get("host") || "";
+  const protoHeader = headers.get("x-forwarded-proto") || "";
+  const proto = protoHeader.split(",")[0].trim() || (host.startsWith("localhost") ? "http" : "https");
+  return host ? `${proto}://${host}` : "";
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
@@ -33,7 +46,9 @@ export async function POST(request: Request) {
 
     await writeFile(filepath, buffer);
 
-    const url = `/uploads/edificando/${filename}`;
+    const baseUrl = buildPublicBaseUrl(request);
+    const relativePath = `/uploads/edificando/${filename}`;
+    const url = baseUrl ? `${baseUrl}${relativePath}` : relativePath;
 
     return NextResponse.json({ url });
   } catch (error) {

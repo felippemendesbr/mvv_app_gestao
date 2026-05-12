@@ -82,7 +82,7 @@ export default function EdificandoPage() {
               <div key={p.id} className="flex items-center gap-2 text-sm">
                 <FileText className="h-4 w-4 text-red-500 shrink-0" />
                 <a
-                  href={p.url.startsWith("http") ? p.url : p.url}
+                  href={p.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#083262] hover:text-[#A47C3B] hover:underline truncate max-w-xs transition-colors"
