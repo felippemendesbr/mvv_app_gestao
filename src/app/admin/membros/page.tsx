@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Search, Filter, Pencil, Trash2 } from "lucide-react";
 import { authFetch } from "@/lib/api";
+import { PERFIS_MEMBRO } from "@/lib/perfis";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDateLocal, parseDateLocal } from "@/lib/dateUtils";
 import { DataGridPaginated, type Column } from "@/components/admin/DataGridPaginated";
@@ -39,17 +40,11 @@ export default function MembrosPage() {
   const [filtroTipo, setFiltroTipo] = useState("");
   const [busca, setBusca] = useState("");
 
-  const [filtroTipoDebounced, setFiltroTipoDebounced] = useState("");
   const [buscaDebounced, setBuscaDebounced] = useState("");
 
   useEffect(() => {
     fetchRedes();
   }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setFiltroTipoDebounced(filtroTipo), 500);
-    return () => clearTimeout(timer);
-  }, [filtroTipo]);
 
   useEffect(() => {
     const timer = setTimeout(() => setBuscaDebounced(busca), 500);
@@ -62,7 +57,7 @@ export default function MembrosPage() {
       try {
         const params = new URLSearchParams();
         if (filtroRede) params.set("redeId", filtroRede);
-        if (filtroTipoDebounced) params.set("tipoUsuario", filtroTipoDebounced);
+        if (filtroTipo) params.set("tipoUsuario", filtroTipo);
         if (buscaDebounced) params.set("busca", buscaDebounced);
         const res = await authFetch(`/api/membros?${params}`);
         if (!res.ok) throw new Error("Erro ao carregar membros");
@@ -75,11 +70,11 @@ export default function MembrosPage() {
       }
     }
     load();
-  }, [filtroRede, filtroTipoDebounced, buscaDebounced]);
+  }, [filtroRede, filtroTipo, buscaDebounced]);
 
   async function fetchRedes() {
     try {
-      const res = await fetch("/api/redes");
+      const res = await fetch("/api/redes", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setRedes(data);
@@ -131,7 +126,7 @@ export default function MembrosPage() {
     },
     {
       key: "tipoUsuario",
-      label: "Tipo",
+      label: "Perfil",
       sortable: true,
       render: (m) => (
         <Badge variant="info">{m.tipoUsuario ?? "Não informado"}</Badge>
@@ -261,15 +256,20 @@ export default function MembrosPage() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-[var(--foreground)] mb-2">
-                Tipo de Usuário
+                Perfil
               </label>
-              <input
-                type="text"
-                placeholder="Ex: Líder, Membro"
+              <select
                 value={filtroTipo}
                 onChange={(e) => setFiltroTipo(e.target.value)}
                 className="w-full px-4 py-2 border border-[#D7C7A3] rounded-lg focus:ring-2 focus:ring-[#A47C3B]/30 focus:border-[#A47C3B] transition-colors"
-              />
+              >
+                <option value="">Todos</option>
+                {PERFIS_MEMBRO.map((perfil) => (
+                  <option key={perfil} value={perfil}>
+                    {perfil}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </CardContent>

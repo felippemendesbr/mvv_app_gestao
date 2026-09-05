@@ -209,3 +209,18 @@ model Usuario {
 
   @@map("Usuario")
 }
+
+model PerfilUsuario {
+  id    Int    @id @default(autoincrement()) @map("Id")
+  label String @map("Label") @db.NVarChar(120)
+
+  @@map("PerfilUsuario")
+}
+
+model PerfilUsuarioUsuario {
+  id    Int    @id @default(autoincrement()) @map("Id")
+  email String @map("Email") @db.NVarChar(180)
+  label String @map("Label") @db.NVarChar(120)
+
+  @@map("PerfilUsuarioUsuario")
+}

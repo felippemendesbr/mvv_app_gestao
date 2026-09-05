@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { authFetch } from "@/lib/api";
+import { PERFIS_MEMBRO } from "@/lib/perfis";
 import { Button } from "@/components/ui/Button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
@@ -31,7 +32,7 @@ export default function NovoMembroPage() {
   });
 
   useEffect(() => {
-    fetch("/api/redes")
+    fetch("/api/redes", { cache: "no-store" })
       .then((r) => r.json())
       .then(setRedes)
       .catch(() => {});
@@ -175,17 +176,23 @@ export default function NovoMembroPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Tipo de Usuário
+                  Perfil *
                 </label>
-                <input
-                  type="text"
-                  placeholder="Ex: Líder, Membro"
+                <select
+                  required
                   value={form.tipoUsuario}
                   onChange={(e) =>
                     setForm({ ...form, tipoUsuario: e.target.value })
                   }
                   className="w-full px-4 py-2.5 border border-[#D7C7A3] rounded-lg focus:ring-2 focus:ring-[#A47C3B]/30 focus:border-[#A47C3B] transition-colors"
-                />
+                >
+                  <option value="">Selecione o perfil</option>
+                  {PERFIS_MEMBRO.map((perfil) => (
+                    <option key={perfil} value={perfil}>
+                      {perfil}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

@@ -138,20 +138,28 @@ export async function GET(request: NextRequest) {
         };
       });
 
-    return NextResponse.json({
-      membrosPorRede,
-      distribuicaoTipoUsuario,
-      comparativoFaixaEtaria,
-      totalMembros: membros.length,
-      totalLideres,
-      totalVideos,
-      showMembrosPorRede,
-      showTotalRedes,
-      showTiposUsuario,
-      showVideos,
-      aniversariantes: isAdmin(userTipo) || isPastor(userTipo) ? aniversariantes : [],
-      pendentesAprovacao: isAdmin(userTipo) || isPastor(userTipo) ? pendentesAprovacao : 0,
-    });
+    return NextResponse.json(
+      {
+        membrosPorRede,
+        distribuicaoTipoUsuario,
+        comparativoFaixaEtaria,
+        totalMembros: membros.length,
+        totalLideres,
+        totalVideos,
+        showMembrosPorRede,
+        showTotalRedes,
+        showTiposUsuario,
+        showVideos,
+        aniversariantes: isAdmin(userTipo) || isPastor(userTipo) ? aniversariantes : [],
+        pendentesAprovacao: isAdmin(userTipo) || isPastor(userTipo) ? pendentesAprovacao : 0,
+      },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+        },
+      }
+    );
   } catch (error) {
     console.error("Erro ao buscar dados do dashboard:", error);
     return NextResponse.json(

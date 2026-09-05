@@ -30,7 +30,7 @@ export default function RedesPage() {
 
   async function fetchRedes() {
     try {
-      const res = await fetch("/api/redes");
+      const res = await fetch("/api/redes", { cache: "no-store" });
       if (!res.ok) throw new Error("Erro ao carregar redes");
       const data = await res.json();
       setRedes(data);

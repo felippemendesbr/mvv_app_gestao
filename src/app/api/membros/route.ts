@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthFromRequest, needsRedeFilter, canWrite } from "@/lib/api";
+import { isTipoAceito } from "@/lib/perfis";
+import { escapeLike } from "@/lib/search";
+import { syncTipoUsuario } from "@/lib/usuarioSync";
 
 export const dynamic = "force-dynamic";
 
@@ -40,19 +43,33 @@ export async function GET(request: NextRequest) {
       where.tipoUsuario = tipoUsuario.trim();
     }
     if (busca && busca.trim()) {
-      const term = busca.trim();
-      where.OR = [
-        { nomeCompleto: { contains: term } },
-        { email: { contains: term } },
-        { telefone: { contains: term } },
-      ];
+      const term = `%${escapeLike(busca.trim())}%`;
+      const rows = await prisma.$queryRaw<{ Id: number }[]>`
+        SELECT Id FROM Membros
+        WHERE NomeCompleto COLLATE Latin1_General_CI_AI LIKE ${term}
+           OR Email COLLATE Latin1_General_CI_AI LIKE ${term}
+           OR Telefone COLLATE Latin1_General_CI_AI LIKE ${term}
+      `;
+      const ids = rows.map((r) => r.Id);
+      if (ids.length === 0) {
+        return NextResponse.json([], {
+          headers: {
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+          },
+        });
+      }
+      where.id = { in: ids };
     }
 
     const membros = await prisma.membro.findMany({
       where,
       orderBy: { nomeCompleto: "asc" },
     });
-    return NextResponse.json(membros);
+    return NextResponse.json(membros, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
   } catch (error) {
     console.error("Erro ao listar membros:", error);
     return NextResponse.json(
@@ -143,22 +160,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const tipoTrim =
+      tipoUsuario && typeof tipoUsuario === "string"
+        ? tipoUsuario.trim()
+        : "";
+    if (tipoTrim && !isTipoAceito(tipoTrim)) {
+      return NextResponse.json(
+        { error: "Perfil de membro inválido" },
+        { status: 400 }
+      );
+    }
+
+    const emailNorm = email.trim().toLowerCase();
     const membro = await prisma.membro.create({
       data: {
         nomeCompleto: nomeCompleto.trim(),
-        email: email.trim().toLowerCase(),
+        email: emailNorm,
         telefone: telefone ? String(telefone).trim() : null,
         dataNascimento: dataNasc,
         rede: rede.label,
-        tipoUsuario:
-          tipoUsuario && typeof tipoUsuario === "string"
-            ? tipoUsuario.trim()
-            : null,
+        tipoUsuario: tipoTrim || null,
         participaMvv: Boolean(participaMvv),
         aceitaNotificacoes: Boolean(aceitaNotificacoes),
         aceitaEmail: Boolean(aceitaEmail),
       },
     });
+    if (tipoTrim) {
+      await syncTipoUsuario([emailNorm], tipoTrim);
+    }
     return NextResponse.json(membro);
   } catch (error) {
     console.error("Erro ao criar membro:", error);

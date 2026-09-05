@@ -19,8 +19,14 @@ export function PwaProvider() {
     if (typeof window === "undefined") return;
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
+        if ("caches" in window) {
+          void caches.delete("mvv-app-cache-v1");
+        }
         navigator.serviceWorker
           .register("/sw.js")
+          .then((reg) => {
+            void reg.update();
+          })
           .catch((err) => console.error("SW registration failed", err));
       });
     }

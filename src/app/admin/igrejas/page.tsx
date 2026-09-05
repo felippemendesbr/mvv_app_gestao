@@ -30,7 +30,7 @@ export default function IgrejasPage() {
 
   async function fetchChurches() {
     try {
-      const res = await fetch("/api/churches");
+      const res = await fetch("/api/churches", { cache: "no-store" });
       if (!res.ok) throw new Error("Erro ao carregar igrejas");
       const data = await res.json();
       setChurches(data);

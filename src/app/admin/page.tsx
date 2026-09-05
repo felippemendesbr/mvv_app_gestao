@@ -106,6 +106,24 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
+    function refresh() {
+      authFetch("/api/dashboard")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => json && setData(json))
+        .catch(() => {});
+    }
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+
+  useEffect(() => {
     function updatePieRadius() {
       if (window.innerWidth < 640) {
         setPieOuterRadius(90);
@@ -117,18 +135,6 @@ export default function DashboardPage() {
     window.addEventListener("resize", updatePieRadius);
     return () => window.removeEventListener("resize", updatePieRadius);
   }, []);
-
-  useEffect(() => {
-    const onFocus = () => {
-      if (!data) return;
-      authFetch("/api/dashboard")
-        .then((res) => (res.ok ? res.json() : null))
-        .then((json) => json && setData(json))
-        .catch(() => {});
-    };
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, [data]);
 
   if (loading) {
     return (

@@ -51,9 +51,9 @@ export function authFetch(
       headers.set("X-User-Tipo", usuario.tipoUsuario ?? "");
       headers.set("X-User-Rede", usuario.rede ?? "");
     }
-    return fetch(url, { ...options, headers });
+    return fetch(url, { ...options, headers, cache: "no-store" });
   } catch {
-    return fetch(url, options);
+    return fetch(url, { ...options, cache: "no-store" });
   }
 }
 

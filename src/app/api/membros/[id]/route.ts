@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthFromRequest, needsRedeFilter, canWrite } from "@/lib/api";
+import { isTipoAceito } from "@/lib/perfis";
+import { syncTipoUsuario } from "@/lib/usuarioSync";
 
 export const dynamic = "force-dynamic";
 
@@ -96,6 +98,11 @@ export async function PUT(
       );
     }
 
+    const existente = await prisma.membro.findUnique({ where: { id } });
+    if (!existente) {
+      return NextResponse.json({ error: "Membro não encontrado" }, { status: 404 });
+    }
+
     const redeIdNum = parseInt(redeId, 10);
     if (isNaN(redeIdNum) || redeIdNum <= 0) {
       return NextResponse.json(
@@ -114,8 +121,7 @@ export async function PUT(
 
     const auth = getAuthFromRequest(request);
     if (auth && needsRedeFilter(auth.tipoUsuario)) {
-      const existente = await prisma.membro.findUnique({ where: { id } });
-      if (!existente || !canAccessMembro(existente, auth)) {
+      if (!canAccessMembro(existente, auth)) {
         return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
       }
       if (rede.label !== auth.rede?.trim()) {
@@ -124,6 +130,14 @@ export async function PUT(
           { status: 403 }
         );
       }
+    }
+
+    const tipoTrim = tipoUsuario ? String(tipoUsuario).trim() : "";
+    if (tipoTrim && !isTipoAceito(tipoTrim, existente.tipoUsuario)) {
+      return NextResponse.json(
+        { error: "Perfil de membro inválido" },
+        { status: 400 }
+      );
     }
 
     let dataNasc: Date | null = null;
@@ -137,20 +151,24 @@ export async function PUT(
       }
     }
 
+    const emailNorm = email.trim().toLowerCase();
     const membro = await prisma.membro.update({
       where: { id },
       data: {
         nomeCompleto: nomeCompleto.trim(),
-        email: email.trim().toLowerCase(),
+        email: emailNorm,
         telefone: telefone ? String(telefone).trim() : null,
         dataNascimento: dataNasc,
         rede: rede.label,
-        tipoUsuario: tipoUsuario ? String(tipoUsuario).trim() : null,
+        tipoUsuario: tipoTrim || null,
         participaMvv: Boolean(participaMvv),
         aceitaNotificacoes: Boolean(aceitaNotificacoes),
         aceitaEmail: Boolean(aceitaEmail),
       },
     });
+    if (tipoTrim) {
+      await syncTipoUsuario([existente.email, emailNorm], tipoTrim);
+    }
     return NextResponse.json(membro);
   } catch (error) {
     console.error("Erro ao atualizar membro:", error);
