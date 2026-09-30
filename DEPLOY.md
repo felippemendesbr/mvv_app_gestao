@@ -20,3 +20,11 @@ Environment variable not found: DATABASE_URL.
 ```
 
 Nesse caso, adicione a variável no painel da hospedagem e reinicie o app.
+
+## Uploads (PDFs do Edificando)
+
+Os arquivos **não** ficam em `public/uploads`. São gravados na pasta persistente `uploads/` (ou no caminho de `UPLOADS_DIR`) e servidos pela rota `/uploads/edificando/...`.
+
+**No publish, não envie nem substitua a pasta `uploads`.** Se o painel copiar o site inteiro, exclua essa pasta do pacote ou publique só os arquivos da aplicação. Caso contrário, cada deploy apaga os PDFs já enviados.
+
+Recomendado em produção: definir `UPLOADS_DIR` apontando para uma pasta **fora** do diretório publicado, por exemplo `C:\dados\mvv-uploads`. Assim o publish do site nunca mexe nos arquivos.

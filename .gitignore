@@ -39,3 +39,8 @@ prisma/*.db-journal
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# uploads persistentes no servidor — nunca versionar nem incluir no publish
+/uploads/*
+!/uploads/.gitkeep
+/public/uploads/

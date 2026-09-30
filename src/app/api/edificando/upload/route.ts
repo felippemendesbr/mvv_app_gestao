@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile } from "fs/promises";
 import path from "path";
+import {
+  ensureUploadDir,
+  sanitizeUploadFilename,
+} from "@/lib/uploads";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 function buildPublicBaseUrl(request: Request): string {
   const explicit = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -11,7 +16,9 @@ function buildPublicBaseUrl(request: Request): string {
   const headers = request.headers;
   const host = headers.get("x-forwarded-host") || headers.get("host") || "";
   const protoHeader = headers.get("x-forwarded-proto") || "";
-  const proto = protoHeader.split(",")[0].trim() || (host.startsWith("localhost") ? "http" : "https");
+  const proto =
+    protoHeader.split(",")[0].trim() ||
+    (host.startsWith("localhost") ? "http" : "https");
   return host ? `${proto}://${host}` : "";
 }
 
@@ -38,10 +45,8 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "edificando");
-    await mkdir(uploadDir, { recursive: true });
-
-    const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const uploadDir = await ensureUploadDir("edificando");
+    const filename = sanitizeUploadFilename(file.name);
     const filepath = path.join(uploadDir, filename);
 
     await writeFile(filepath, buffer);
